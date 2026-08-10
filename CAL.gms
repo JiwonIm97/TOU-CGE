@@ -420,7 +420,20 @@ Parameter
 *==============================================================================
  sigma_Y(i,z)    = sigma_Y(i,z)/{SUM[ij,sigma_Y(ij,z)*PCO(ij,z)*CO(ij,z)]
                    /CTHO(z)};
+*--- [E2] 전력 sigma_Y 재보정
+*    GTAP11 값 0.987 은 석탄·가스·건설과 동일한 잔차 자리표시값.
+*    탄력성 0.987/(-1.3) = -0.76 으로 한국 문헌(-0.16~-0.38) 대비 과대. 0.325로 보정
+SCALAR eps_target / 0.25 /;
+
+ sigma_Y('18_ELEC',z) = eps_target*ABS(frisch(z));
  gamma_LES(i,z)  = PCO(i,z)*CO(i,z)*sigma_Y(i,z)/CTHO(z);
+*--- 한계예산몫 합: 1 (전력 외 재화로 잔차 배분)
+ gamma_LES(i,z)$(NOT IELEC(i))
+     = gamma_LES(i,z)*[1-SUM(ii$IELEC(ii), gamma_LES(ii,z))]
+       /SUM(ii$(NOT IELEC(ii)), gamma_LES(ii,z));
+
+ ABORT$(SMAX(z, ABS(SUM(i,gamma_LES(i,z))-1)) > 1e-8)
+     "gamma_LES must sum to 1", gamma_LES;
 
  CMINO(i,z)      = CO(i,z)+gamma_LES(i,z)*CTHO(z)/{PCO(i,z)*frisch(z)};
 
@@ -544,13 +557,12 @@ Parameters
 
 * ==============================================================================
 * E2_CAL.gms  -- Essay 2 블록 구조 보정
-* CAL.gms 직후에 include
 * ------------------------------------------------------------------------------
 * 설계 원칙
 *  - 벤치마크에서 tth = tth_B = 0  ->  PC_HH = PC, C_B = theta_B*C, CE_PHYS = C
-*    따라서 GTAP 벤치마크를 재보정 없이 그대로 재현한다.
-*  - IBR 요금 "수준"은 이미 GTAP 구매자가격 안에 있으므로 별도 부과하지 않는다.
-*    ToU 전환은 블록별 wedge 편차 tth_B 로만 구현한다.
+*    따라서 GTAP 벤치마크를 재보정 없이 그대로 재현.
+*  - IBR 요금 수준은 이미 GTAP 구매자가격 안에 있으므로 별도 부과하지 않음.
+*    ToU 전환은 블록별 wedge 편차 tth_B 로만 구현.
 * ==============================================================================
 
 *==============================================================================
@@ -559,29 +571,69 @@ Parameters
 * 기본값: 균등 (ToU 미적용 지역은 어떤 값이든 결과에 영향 없음)
  theta_B(b,z) = 1/card(b);
 
-* --- 한국: KEPCO 설문 A7 (시간대별 소비 비중) 으로 교체할 것 --------------------
-* !! 아래는 자리표시 값이다. 반드시 실제 추정치로 대체한다.
- theta_B('peak','01_KOR') = 0.30;
- theta_B('mid' ,'01_KOR') = 0.42;
- theta_B('off' ,'01_KOR') = 0.28;
-
+* --- KEPCO 설문 A7 (시간대별 소비 비중)--------------------
+ theta_B('mid' ,'01_KOR') = 0.2628;
+ theta_B('peak','01_KOR') = 0.4631;
+ theta_B('off' ,'01_KOR') = 0.2741;
  ABORT$(SMAX(z, ABS(SUM(b,theta_B(b,z))-1)) > 1e-8)
-     "theta_B: block shares must sum to 1 in every region", theta_B;
+     "theta_B must sum to 1", theta_B;
 
 *==============================================================================
 * 2. 시간대 간 대체탄력성 sigma_ToU
 *==============================================================================
-* ToU 미적용 지역은 0 (블록 구조가 실질적으로 비활성)
- sigma_ToU(z)        = 0;
+*--- nest 
+ theta_MID(z)   = SUM(BM, theta_B(BM,z));
+ theta_S(z)     = SUM(BS, theta_B(BS,z));
+ theta_BS(BS,z) = theta_B(BS,z)/theta_S(z);
 
-* --- 한국: KEPCO 설문 A8 기반 추정치 / 문헌 이식값으로 교체할 것 ---------------
-* !! 자리표시 값. micro/tou_micro.py 의 집계 일관성 보정 결과로 갱신한다.
- sigma_ToU('01_KOR') = 0.30;
+ ABORT$(SMIN(z, theta_S(z)) < 1e-6)
+     "theta_S is zero: lower nest is empty", theta_S;
+ ABORT$(SMAX(z, ABS(SUM(BS,theta_BS(BS,z))-1)) > 1e-8)
+     "theta_BS must sum to 1 within the lower nest", theta_BS;
 
-* sigma = 1 이면 EQ_E2_3 의 지수가 0 이 되어 방정식이 퇴화한다.
- ABORT$(SMIN(z, ABS(sigma_ToU(z)-1)) < 1e-6)
-     "sigma_ToU must not equal 1", sigma_ToU;
+*--- 대체탄력성
+*    sigma_ToU1 : peak vs off. Faruqui-Sergici 계열 TOU 실험 CES 추정치.
+*                 보조기술 없는 주택용 기준. 민감도 0.05 / 0.15 / 0.30
+*    sigma_ToU2 : mid vs 나머지. A8 에서 mid 무반응 -> 0 (Leontief)
+ sigma_ToU1(z) = 0;
+ sigma_ToU2(z) = 0;
+ sigma_ToU1('01_KOR') = 0.15;
+* sigma_ToU1('01_KOR') = 0.5;
+ 
+ ABORT$(SMIN(z, ABS(sigma_ToU1(z)-1)) < 1e-6)
+     "sigma_ToU1 = 1 is a Cobb-Douglas singularity: use 0.999 or 1.001";
+ ABORT$(SMIN(z, ABS(sigma_ToU2(z)-1)) < 1e-6)
+     "sigma_ToU2 = 1 is a Cobb-Douglas singularity";
+*------------------------------------------------------------------------------
+* 3. 시간대별 공급 한계비용 프리미엄 delta_b
+*    출처 : EPSIS 시간별SMP(육지) / 가중평균SMP, 2025년 365일 평균
+*    원자료는 계통부하 가중평균을 분모로 하므로 계통 부하형상 중심.
+*    가계 부하형상(theta_B)은 계통보다 첨두 편중이 강하므로 재정규화 필요.
+*------------------------------------------------------------------------------
+ delta_b(b,z) = 0;
+ delta_b('mid' ,'01_KOR') =  0.06;
+ delta_b('peak','01_KOR') =  0.07;
+ delta_b('off' ,'01_KOR') = -0.12;
 
+*--- 계통부하 중심 -> 가계부하 중심. 벤치마크에서 E2_RESCOST = 0 이 되도록.
+ delta_b(b,z) = delta_b(b,z) - SUM(bb, theta_B(bb,z)*delta_b(bb,z));
+
+ ABORT$(SMAX(z, ABS(SUM(b, theta_B(b,z)*delta_b(b,z)))) > 1e-8)
+     "delta_b must be mean-zero at benchmark quantities", delta_b;
+ 
+ LSFO(z) = 1;
+
+ display delta_b;
+
+
+
+*--- 벤치마크 : 모든 블록 가격이 동일하므로 두 둥지 모두 항등적으로 붕괴
+ PC_HBO(b,z) = PCO('18_ELEC',z);
+ PC_HSO(z)   = PCO('18_ELEC',z);
+ PC_HHO(i,z) = PCO(i,z);
+ C_SO(z)     = theta_S(z)*CO('18_ELEC',z);
+ C_BO(b,z)   = theta_B(b,z)*CO('18_ELEC',z);
+ CE_PHYSO(z) = CO('18_ELEC',z);
 *==============================================================================
 * 3. 벤치마크 값
 *==============================================================================
@@ -599,14 +651,13 @@ Parameters
 * 4. 물리량 환산 (IEA WEB 기반)
 *==============================================================================
 * EHI(p_elec,z) 는 CAL.gms 에서 이미 계산됨: ktoe per unit of CGE value
-* p_elec 는 (원소가 아니라) 집합이므로 SUM 으로 접근한다.
  EHI_ELEC(z)               = SUM(p_elec, EHI(p_elec,z));
  PKWH_O(z)$EHI_ELEC(z)     = PCO('18_ELEC',z)/EHI_ELEC(z);
 
-* PKWH_O(z) 는 벤치마크 가계 전력가격을 "모형단위 / ktoe" 로 표현한 값이다.
-* 한국 요금표(원/kWh)를 tth_B 로 환산할 때의 앵커로 사용한다.
+* PKWH_O(z) 는 벤치마크 가계 전력가격을 "모형단위 / ktoe" 로 표현한 값.
+* 한국 요금표(원/kWh)를 tth_B 로 환산할 때의 앵커로 사용.
 *   1 ktoe = 11 630 MWh = 11 630 000 kWh
- display theta_B, sigma_ToU, EHI_ELEC, PKWH_O;
+* display theta_B, sigma_ToU, EHI_ELEC, PKWH_O;
 
 
 

@@ -177,6 +177,8 @@ PARAMETER
  valTIC_HH(z,sim)       Household consumption wedge revenue
  valRCY_POOL(z,sim)     Recyclable revenue pool
  valtth_B(b,z,sim)      Household electricity wedge by block
+ valTIC_HH(z,sim)
+ valtou_shift(z,sim)
 
 * --- 파생 지표 ----------------------------------------------------------------
  E2_LOAD(b,z,sim)       Household electricity load by block in ktoe
@@ -186,6 +188,10 @@ PARAMETER
  E2_CESGAP(z,sim)       CES index minus physical load (demand-side resource saving)
  E2_BILL(z,sim)         Household electricity bill (purchaser value)
  E2_EV(z,sim)           Equivalent variation based on household purchaser prices
+ E2_RESCOST(z,sim)      Change in supply-side resource cost from load shifting
+ E2_WELF(z,sim)         Total welfare change (EV + resource cost)
+ E2_LSF(z,sim)     
+ E2_PELEC(z,sim)  
 
 * --- CGE-micro 연계 전달 벡터 (마이크로시뮬레이션 입력) -------------------------
  E2_LINK_PB(b,z,sim)    Relative price change of block b versus benchmark

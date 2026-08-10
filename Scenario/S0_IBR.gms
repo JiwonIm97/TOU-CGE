@@ -12,5 +12,4 @@ $include "Scenario/Apply_Policy.gms"
 loop(sim,
     SOLVE TOU USING CNS;
 $include "Results_format/CGE_Results.gms"
-$include "Results_format/E2_Results.gms"
 );

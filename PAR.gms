@@ -243,7 +243,6 @@ PARAMETER
 
 * ==============================================================================
 * E2_Declare.gms  -- Essay 2 파라미터 및 변수 선언
-* PAR.gms 직후, CAL.gms 이전에 include
 * ==============================================================================
 
 PARAMETERS
@@ -254,7 +253,8 @@ PARAMETERS
  tth0(i,z)         Benchmark household consumption wedge (=0)
  tth_B_raw(b,z)    ToU wedge schedule before normalisation (exogenous shock)
  e2_expost(z)      1 if ex-post revenue neutrality is imposed on the ToU reform
-
+ p_ToU(b,z)        ToU tariff schedule by block (won per kWh)
+ p_bar(z)          Quantity-weighted mean of the ToU schedul
 * --- 벤치마크 값 ---------------------------------------------------------------
  PC_HHO(i,z)       Benchmark household purchaser price of commodity i
  PC_HBO(b,z)       Benchmark household purchaser price of electricity block b
@@ -278,8 +278,33 @@ VARIABLES
  tou_shift(z)      Proportional shift applied to the ToU wedge schedule
 ;
 
+PARAMETER
+ theta_BS(b,z)     Share of block b within the lower (shiftable) nest
+ theta_MID(z)      Share of the non-shiftable block in household electricity
+ theta_S(z)        Share of the shiftable composite in household electricity
+ sigma_ToU1(z)     Substitution elasticity within the lower nest (peak vs off)
+ sigma_ToU2(z)     Substitution elasticity of the upper nest (mid vs composite)
+ PC_HSO(z)         Benchmark price index of the shiftable composite
+ C_SO(z)           Benchmark quantity of the shiftable composite
+ delta_b(b,z)      Marginal supply cost premium of block b (relative to mean)
+;
+
+POSITIVE VARIABLES
+ PC_HS(z)          CES price index of the shiftable electricity composite
+ C_S(z)            CES quantity index of the shiftable electricity composite
+;
+
 POSITIVE VARIABLES PC_HH, PC_HB, C_B, CE_PHYS;
 
+PARAMETER
+ delta_b(b,z)      Marginal supply cost premium of block b (relative to mean)
+ LSFO(z)           Benchmark load-shape cost factor (=1)
+;
+
+VARIABLES
+ LSF(z)            Load-shape cost factor for electricity supplying industries
+;
+POSITIVE VARIABLE LSF;
 
 Scalar
  Tiny small figure to avoid division by zero / 0.000000000001/ ;
@@ -367,10 +392,8 @@ $LOAD sigma_KD, sigma_LD, sigma_KLE, sigma_X1, sigma_X2, sigma_X3, sigma_X0, sig
  sigma_ENER(j,z) = 0.9 ;
 
 *------------------------------------------------------------------------------
-* LES parameters - Frisch
- frisch(Z3)   = -1.1;
- frisch(Z4)   = -1.3;
- frisch(z5)  = -1.5;
+* LES parameters - Frisch (선진국 기준으로 설정)
+ frisch(Z) = -1.3;
 
 *------------------------------------------------------------------------------
 * Slopes of taxation functions

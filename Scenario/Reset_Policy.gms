@@ -18,3 +18,10 @@
  tth.FX(i,z)     = tth0(i,z);
  tth_B_raw(b,z)  = 0;
  e2_expost(z)    = 0;
+
+* --- ToU 요금표 ---
+ p_ToU(b,z) = 0;
+ p_bar(z)   = 0;
+
+* --- 내생변수 초기값 (warm start 오염 방지) ---
+ tou_shift.L(z) = 0;

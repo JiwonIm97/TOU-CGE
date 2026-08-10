@@ -2,6 +2,26 @@
 * Model.gms
 * 변수·방정식 선언 및 정의 (원본 L1222-1916)
 *  CBAM - modular refactor of 1_Static_Model_GTAP11b_BASE.gms
+
+* ==============================================================================
+* 중첩 CES 전환 
+* ------------------------------------------------------------------------------
+* 기존 : 평평한 3블록 단일 sigma CES
+* 변경 : 2단 중첩
+*
+*                 C('18_ELEC')          가격 PC_HH        LES 로 전달
+*                      |
+*         +------------+------------+   sigma_ToU2        상위 nest 
+*         |                         |
+*      C_B('mid')                 C_S    가격 PC_HS
+*                                   |
+*                          +--------+--------+  sigma_ToU1  하위 nest
+*                          |                 |
+*                    C_B('peak')       C_B('off')
+*
+* 근거
+*   sigma_ToU2 = 0. (A8)? 근데 이건 질문 구조상 고정했던 것임.
+*   sigma_ToU1 은 TOU 실험의 CES 추정 대상과 정확히 일치하므로 문헌값 직접 사용.
 * ==============================================================================
 
 *  5.1 Variable declarations
@@ -309,14 +329,21 @@ EQUATIONS
 *==============================================================================
 *   5.3.1 Production
 *==============================================================================
- EQ1(j3,z)..     VA(j3,z) =e= v(j3,z)*XST(j3,z);
+* EQ1(j3,z)..     VA(j3,z) =e= v(j3,z)*XST(j3,z);
 
  EQ1_1(j2,z)..   KLE(j2,z) =e= v2(j2,z)*XST(j2,z);
 
- EQ2(j,z)..      CI(j,z) =e= io(j,z)*XST(j,z);
+* EQ2(j,z)..      CI(j,z) =e= io(j,z)*XST(j,z);
  
- EQ2_1(j3,z)..   CE(j3,z) =e= io2(j3,z)*XST(j3,z);
+* EQ2_1(j3,z)..   CE(j3,z) =e= io2(j3,z)*XST(j3,z);
+*--- 교체식 : 전력공급 산업에만 LSF 를 곱한다. 그 외는 [ ] 안이 1.
+ EQ1(j3,z)..     VA(j3,z)  =e= v(j3,z)  *XST(j3,z)*[1+(LSF(z)-1)$JPOW(j3)];
 
+ EQ2(j,z)..      CI(j,z)   =e= io(j,z)  *XST(j,z) *[1+(LSF(z)-1)$JPOW(j)];
+
+ EQ2_1(j3,z)..   CE(j3,z)  =e= io2(j3,z)*XST(j3,z)*[1+(LSF(z)-1)$JPOW(j3)];
+
+ 
  EQ3(j,z)..      VA(j,z) =e= B_VA(j,z)*{
                     [beta_VA(j,z)*LDC(j,z)**(-rho_VA(j,z))]$LDCO(j,z)
                    +[(1-beta_VA(j,z))*KDC(j,z)**(-rho_VA(j,z))]$KDCO(j,z)
@@ -399,7 +426,7 @@ EQUATIONS
 
  EQ20(z)..       TIPT(z) =e= SUM[j,TIP(j,z)];
 
- EQ21(z)..       TPRCTS(z) =e= TICT(z)+TIMT(z)+TIXT(z);
+ EQ21(z)..       TPRCTS(z) =e= TICT(z)+TIMT(z)+TIXT(z)+TIC_HH(z);;
 
  EQ22(z)..       TICT(z) =e= SUM[i,TIC(i,z)];
 
@@ -447,8 +474,9 @@ EQUATIONS
 *==============================================================================
 *   5.3.3 Demand
 *==============================================================================
- EQ36(i,z)..     PC(i,z)*C(i,z) =e= PC(i,z)*CMIN(i,z)+gamma_LES(i,z)
-                                 *{CTH(z)-SUM[ij,PC(ij,z)*CMIN(ij,z)]};
+ EQ36(i,z)..     PC_HH(i,z)*C(i,z) =e= PC_HH(i,z)*CMIN(i,z)+gamma_LES(i,z)
+                                *{CTH(z)-SUM[ij,PC_HH(ij,z)*CMIN(ij,z)]};
+
 
  EQ37(i,z)..     PC(i,z)*INV(i,z) =e= gamma_INV(i,z)*IT(z);
 
@@ -614,7 +642,7 @@ EQUATIONS
                  *SUM[(j,z),{(PVA(j,z)*VA(j,z)+TIP(j,z))/VA(j,z)}*VA(j,z)/e(z)]
                  /SUM[(j,z),{(PVAO(j,z)*VAO(j,z)+TIPO(j,z))/VAO(j,z)}*VA(j,z)/eO(z)]}**0.5;
 
- EQ68(z)..       PIXCON(z) =e= SUM[i,PC(i,z)*CO(i,z)]/SUM[i,PCO(i,z)*CO(i,z)];
+ EQ68(z)..       PIXCON(z) =e= SUM[i,PC_HH(i,z)*CO(i,z)]/SUM[i,PCO(i,z)*CO(i,z)];
 
  EQ69(z)..       PIXINV(z) =e= PROD[i$gamma_INV(i,z),(PC(i,z)/PCO(i,z))
                                  **gamma_INV(i,z)];
@@ -625,7 +653,9 @@ EQUATIONS
 *==============================================================================
 *   5.3.6 Equilibrium
 *==============================================================================
- EQ71(i1,z)..    Q(i1,z) =e= C(i1,z)+CG(i1,z)+INV(i1,z)+DIT(i1,z);
+ EQ71(i1,z)..    Q(i1,z) =e=  C(i1,z) + [CE_PHYS(z)-C(i1,z)]$IELEC(i1)
+                            + CG(i1,z)+INV(i1,z)+DIT(i1,z);
+
 
  EQ72(l,z)..     LS(l,z) =e= SUM[j$LDO(l,j,z),LD(l,j,z)];
 
@@ -662,8 +692,8 @@ EQUATIONS
                               +SUM[(k,j)$KDO(k,j,z),R(k,j,z)*KD(k,j,z)]
                               +TPRCTS(z)+TCTAX(z)+TPRODN(z)+TCBAM(z)$z3(z);
  
- EQ84(z)..       GDP_FD(z) =e=
-                 SUM[i,PC(i,z)*(C(i,z)+CG(i,z)+INV(i,z))]
+ EQ84(z)..       GDP_FD(z) =e= SUM[i,PC_HH(i,z)*C(i,z)]
+                +SUM[i,PC(i,z)*(CG(i,z)+INV(i,z))]
                 +SUM[(i,zj)$EXO(i,z,zj),e(z)*PWX(i,z,zj)*EX(i,z,zj)]
                 +SUM[i$MRGNO(i,z),e(z)*PWMG(i)*MRGN(i,z)]
                 -SUM[(i,zj)$IMO(i,zj,z),e(z)*IM(i,zj,z)
@@ -737,33 +767,37 @@ EQUATIONS
 
 
 * ==============================================================================
-* E2_Model.gms  -- Essay 2 추가 방정식 (가계 전력 ToU 블록 구조)
-* Model.gms 직후에 include. MODEL /all/ 이 자동으로 포함한다.
+* E2_Model.gms  -(가계 전력 ToU 블록 구조)
 * ------------------------------------------------------------------------------
 * 구조
 *   LES  ->  C('18_ELEC',z)      : 가계 전력 CES 수량지수, 가격 PC_HH
 *   CES  ->  C_B(b,z)            : 블록별 전력 수요, 가격 PC_HB
-*   합    ->  CE_PHYS(z)          : 물리적 전력 소비 (시장청산·배출계산에 사용)
+*   Total  ->    CE_PHYS(z)      : 물리적 전력 소비 (시장청산·배출계산에 사용)
 *
 * 표준 CES 를 쓰는 이유
 *   지출 정합성  PC_HH*C = SUM_b PC_HB*C_B  이 항등적으로 성립하므로
-*   Walras 법칙이 깨지지 않는다. 가법형(additive) CES 는 물리적 가법성을
-*   보장하는 대신 지출이 누출되어 CGE 에서 사용할 수 없다.
-*   물리량 CE_PHYS 는 별도 변수로 명시적으로 정의한다.
-*   C - CE_PHYS > 0 은 "동일 효용을 더 적은 물리적 전력으로 달성한 몫",
-*   즉 수요측 부하이전의 자원절감분으로 해석되며 진단지표로 보고한다.
+*   Walras 법칙이 깨지지 않음.
+*   물리량 CE_PHYS 는 별도 변수로 명시적으로 정의.
+*   C - CE_PHYS < 0 은 "동일 효용을 더 적은 물리적 전력으로 달성한 몫",
+*   즉 수요측 부하이전의 물리적 비용으로 해석되며 진단지표.
 * ==============================================================================
 
 EQUATIONS
  EQ_E2_1(i,z)    Household purchaser price of non-electricity commodities
  EQ_E2_2(b,z)    Household purchaser price of electricity by block
- EQ_E2_3(z)      CES price index of household electricity
- EQ_E2_4(b,z)    CES demand for electricity by block
+* EQ_E2_3(z)      CES price index of household electricity
+* EQ_E2_4(b,z)    CES demand for electricity by block
  EQ_E2_5(z)      Physical household electricity consumption
  EQ_E2_6(z)      Government revenue from the household consumption wedge
  EQ_E2_7(z)      Recyclable revenue pool
  EQ_E2_8(b,z)    ToU wedge schedule after proportional normalisation
  EQ_E2_9(z)      Ex-post revenue neutrality or zero shift
+ EQ_E2_3a(z)     CES price index of the shiftable electricity composite
+ EQ_E2_3(z)      CES price index of household electricity (upper nest)
+ EQ_E2_4a(z)     Demand for the shiftable composite
+ EQ_E2_4b(b,z)   Demand for the non-shiftable block
+ EQ_E2_4(b,z)    Demand for shiftable blocks within the lower nest
+ EQ_E2_10(z)     Load-shape cost factor for electricity supply
 ;
 
 *------------------------------------------------------------------------------
@@ -779,18 +813,47 @@ EQUATIONS
      PC_HB(b,z) =e= (1+tth_B(b,z))*PC('18_ELEC',z);
 
 *------------------------------------------------------------------------------
-* 가계 전력 CES 가격지수  (LES 로 전달되는 가격)
+* lower nest 가격지수  (peak vs off)
 *------------------------------------------------------------------------------
- EQ_E2_3(z)..
-     PC_HH('18_ELEC',z)**(1-sigma_ToU(z))
-       =e= SUM[b, theta_B(b,z)*PC_HB(b,z)**(1-sigma_ToU(z))];
+ EQ_E2_3a(z)..
+     PC_HS(z)**(1-sigma_ToU1(z))
+       =e= SUM[BS, theta_BS(BS,z)*PC_HB(BS,z)**(1-sigma_ToU1(z))];
 
 *------------------------------------------------------------------------------
-* 블록별 수요
+* upper nest 가격지수  (mid vs 이동가능 복합재)  -> LES 로 전달
+*----------------------------------s--------------------------------------------
+ EQ_E2_3(z)..
+     PC_HH('18_ELEC',z)**(1-sigma_ToU2(z))
+       =e= SUM[BM, theta_MID(z)*PC_HB(BM,z)**(1-sigma_ToU2(z))]
+         + theta_S(z)*PC_HS(z)**(1-sigma_ToU2(z));
+
 *------------------------------------------------------------------------------
- EQ_E2_4(b,z)..
-     C_B(b,z) =e= C('18_ELEC',z)*theta_B(b,z)
-                  *[PC_HB(b,z)/PC_HH('18_ELEC',z)]**(-sigma_ToU(z));
+* upper nest 수요
+*------------------------------------------------------------------------------
+ EQ_E2_4a(z)..
+     C_S(z) =e= C('18_ELEC',z)*theta_S(z)
+                *[PC_HS(z)/PC_HH('18_ELEC',z)]**(-sigma_ToU2(z));
+
+ EQ_E2_4b(BM,z)..
+     C_B(BM,z) =e= C('18_ELEC',z)*theta_MID(z)
+                   *[PC_HB(BM,z)/PC_HH('18_ELEC',z)]**(-sigma_ToU2(z));
+
+*------------------------------------------------------------------------------
+* lower nest 수요
+*------------------------------------------------------------------------------
+ EQ_E2_4(BS,z)..
+     C_B(BS,z) =e= C_S(z)*theta_BS(BS,z)
+                   *[PC_HB(BS,z)/PC_HS(z)]**(-sigma_ToU1(z));
+
+
+* EQ_E2_3(z)..
+*     PC_HH('18_ELEC',z)**(1-sigma_ToU(z))
+*       =e= SUM[b, theta_B(b,z)*PC_HB(b,z)**(1-sigma_ToU(z))];
+
+
+* EQ_E2_4(b,z)..
+*     C_B(b,z) =e= C('18_ELEC',z)*theta_B(b,z)
+*                  *[PC_HB(b,z)/PC_HH('18_ELEC',z)]**(-sigma_ToU(z));
 
 *------------------------------------------------------------------------------
 * 물리적 총 전력소비 (시장청산·CO2 계산에 사용)
@@ -800,21 +863,21 @@ EQUATIONS
 
 *------------------------------------------------------------------------------
 * 가계 소비 wedge 수입
-*   PC_HH*C = PC*CE_PHYS + TIC_HH  가 항등적으로 성립한다.
+*   PC_HH*C = PC*CE_PHYS + TIC_HH  가 항등적으로 성립.
 *------------------------------------------------------------------------------
  EQ_E2_6(z)..
      TIC_HH(z) =e= SUM[b, tth_B(b,z)*PC('18_ELEC',z)*C_B(b,z)]
                  + SUM[i$(NOT IELEC(i)), tth(i,z)*PC(i,z)*C(i,z)];
 
 *------------------------------------------------------------------------------
-* 환류 재원 풀. ToU 전용 모형에서는 요금 wedge 수입이 유일한 재원이다.
+* 환류 재원 풀.
 *------------------------------------------------------------------------------
  EQ_E2_7(z)..
      RCY_POOL(z) =e= TIC_HH(z);
 
 *------------------------------------------------------------------------------
 * 사후 세수중립
-*   tth_B_raw 는 요금표에서 나온 원 wedge. tou_shift 로 평행이동한다.
+*   tth_B_raw 는 요금표에서 나온 원 wedge. tou_shift 로 평행이동.
 *   e2_expost = 1 이면 행태반응 이후 TIC_HH = 0 이 되도록 tou_shift 를 내생 결정.
 *   e2_expost = 0 이면 tou_shift = 0, 즉 요금표를 그대로 적용.
 *   벤치마크(tth_B_raw=0, e2_expost=0)에서 tth_B = 0, tou_shift = 0.
@@ -824,3 +887,13 @@ EQUATIONS
 
  EQ_E2_9(z)..
      e2_expost(z)*TIC_HH(z) + (1-e2_expost(z))*tou_shift(z) =e= 0;
+
+*------------------------------------------------------------------------------
+* 부하형상 비용 이동자
+*   분자 : 가계 부하 재배분이 유발한 발전 자원비용 변화
+*   분모 : 전력 총산출. 가계 비중만큼 자동 감쇠
+*   첨두 감소 -> 분자 음수 -> LSF < 1 -> 단위비용 하락 -> PC 하락
+*------------------------------------------------------------------------------
+ EQ_E2_10(z)..
+     LSF(z) =e= 1 + SUM[b, delta_b(b,z)*(C_B(b,z)-C_BO(b,z))]
+                    /XSO_I('18_ELEC',z);

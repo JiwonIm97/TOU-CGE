@@ -2,8 +2,8 @@
 * Results_format/Unload.gms      [batinclude: %1 = 결과 GDX 파일명]
 * ==============================================================================
 execute_unload "Output_w-1/%1.gdx"
- valgamma_LES, valTCBAM, valGDP_BP, valGDP_BP_REAL, valPIXGDP, valCTAX, 
- valCP, valTCTAX, valSH, valKLE, valPC, valC, valCAB, valCABX, valCG, 
+ valgamma_LES, valGDP_BP, valGDP_BP_REAL, valPIXGDP, valCTAX, 
+ valTCTAX, valSH, valKLE, valPC, valC, valCAB, valCABX, valCG, 
  valCI, valCE, valCMIN, valCTH, valCTH_REAL, valDD, valDEP, valDI, valDE, 
  valDIT, valDS, valDS_I, vale, valEX, valEXT, valG, valG_REAL, valGDP_BP_W, 
  valGDP_BP_W_REAL, valGDP_FD, valGDP_IB, valGDP_MP, valGDP_MP_REAL, valIM, 
@@ -17,5 +17,6 @@ execute_unload "Output_w-1/%1.gdx"
  valttip, valttiw, valttix, valVA, valW, valWC, valWTI, valXS, valXS_I, valYDH, 
  valYG, valYH, valYHK, valYHL, valYROW, valEV, valLEON, valEE, valNE, valEH, 
  valTFC_com, valTFC_ind, valTFC, valCO2I, valCO2NE, valCO2I2, valCO2NE2, 
- valTCO22, valTCO2I, valTCO2NE, valTCO2, valKOR_TFC
+ valTCO22, valTCO2I, valTCO2NE, valTCO2, valKOR_TFC,  E2_RESCOST, E2_WELF,  valTIC_HH, valPC_HH, valCE_PHYS
+ valtth_B, valtou_shift E2_SHARE,  E2_CESGAP,  E2_LSF,  E2_PELEC,  E2_EV,  E2_BILL
 ;

@@ -8,12 +8,12 @@
 * Reporting
 *==============================================================================
  valgamma_LES(i,z,sim)          = gamma_LES(i,z);
- valTCBAM(z,sim)                = TCBAM.l(z);
+* valTCBAM(z,sim)                = TCBAM.l(z);
  valGDP_BP(z,sim)               = GDP_BP.l(z);
  valGDP_BP_REAL(z,sim)          = GDP_BP_REAL.l(z);
  valPIXGDP(z,sim)               = PIXGDP.l(z);
  valCTAX(z,sim)                 = CTAX.L(z);
- valCP(z,sim)                   = CP.L(z);
+* valCP(z,sim)                   = CP.L(z);
  valTCTAX(z,sim)                = TCTAX.L(z);
  valSH(z,sim)                   = SH.l(z);
  valKLE(j,z,sim)                = KLE.l(j,z);
@@ -148,7 +148,8 @@
  valEH(p_oil,z,sim)             = EHI(p_oil,z)*C.L('03_OIL',z);
  valEH(p_gas,z,sim)             = EHI(p_gas,z)*C.L('04_GAS',z); 
  valEH(p_oilproduct,z,sim)      = EHI(p_oilproduct,z)*C.L('10_PETROLCOAL',z);
- valEH(p_elec,z,sim)            = EHI(p_elec,z)*C.L('18_ELEC',z);
+* valEH(p_elec,z,sim)            = EHI(p_elec,z)*C.L('18_ELEC',z);
+ valEH(p_elec,z,sim)            = EHI(p_elec,z)*CE_PHYS.L(z);
  valTFC_com(product,z,sim)      = valEH(product,z,sim) + sum(j5,valEE(product,j5,z,sim))+sum(j,valNE(product,j,z,sim));
  valTFC_ind(j,z,sim)            = sum(product,valEE(product,j,z,sim)+valNE(product,j,z,sim));   
  valTFC(z,sim)                  = sum(product, valTFC_com(product,z,sim));
@@ -162,3 +163,85 @@
  valTCO2(z,sim)                 = valTCO2I(z,sim) + valTCO2NE(z,sim);
  valKOR_TFC(product,sim)        = valEH(product,'01_KOR',sim) + Sum(j5,valEE(product,j5,'01_KOR',sim))+Sum(j,valNE(product,j,'01_KOR',sim));
  
+* ==============================================================================
+* Results_format/E2_Results.gms
+* Essay 2 결과 적재. sim 루프 내부, CGE_Results.gms 직후에 include.
+* ==============================================================================
+
+*==============================================================================
+* 1. 원시 결과
+*==============================================================================
+ valPC_HH(i,z,sim)     = PC_HH.l(i,z);
+ valPC_HB(b,z,sim)     = PC_HB.l(b,z);
+ valC_B(b,z,sim)       = C_B.l(b,z);
+ valCE_PHYS(z,sim)     = CE_PHYS.l(z);
+ valTIC_HH(z,sim)      = TIC_HH.l(z);
+ valRCY_POOL(z,sim)    = RCY_POOL.l(z);
+ valtth_B(b,z,sim)     = tth_B.l(b,z);
+ valtou_shift(z,sim)   = tou_shift.l(z);
+*==============================================================================
+* 2. 물리량 (ktoe). GWh 로 보려면 x 11.63
+*==============================================================================
+ E2_LOAD(b,z,sim)      = EHI_ELEC(z)*C_B.l(b,z);
+ E2_LOAD_TOT(z,sim)    = EHI_ELEC(z)*CE_PHYS.l(z);
+
+ E2_SHARE(b,z,sim)$CE_PHYS.l(z)
+                       = C_B.l(b,z)/CE_PHYS.l(z);
+
+ E2_SHIFT(b,z,sim)     = EHI_ELEC(z)*(C_B.l(b,z)-C_BO(b,z));
+
+*==============================================================================
+* 3. 진단: CES 수량지수와 물리량의 괴리
+*    C - CE_PHYS <= 0. 절댓값은 동일 전력서비스를 유지하기 위해 추가로
+*    소비한 물리적 전력량이며, 부하이전의 자원비용으로 해석. 벤치마크에서 0.
+*==============================================================================
+ E2_CESGAP(z,sim)      = C.l('18_ELEC',z) - CE_PHYS.l(z);
+
+*==============================================================================
+* 4. 가계 전기요금 지출 (구매자가격 기준)
+*==============================================================================
+ E2_BILL(z,sim)        = SUM(b, PC_HB.l(b,z)*C_B.l(b,z));
+
+*==============================================================================
+* 5. 후생 (Stone-Geary EV, 가계 구매자가격 기준)
+*    기존 valEV 는 PC 를 쓰므로 wedge 를 반영하지 못한다. E2_EV 를 사용할 것.
+*==============================================================================
+ E2_EV(z,sim) =
+     ( CTH.l(z) - SUM(i, PC_HH.l(i,z)*CMINO(i,z)) )
+     * exp( SUM(i$gamma_LES(i,z),
+              gamma_LES(i,z)*( log(PC_HHO(i,z)) - log(PC_HH.l(i,z)) )) )
+   - ( CTHO(z) - SUM(i, PC_HHO(i,z)*CMINO(i,z)) );
+*==============================================================================
+* 5-2. 공급측 자원비용 변화
+*    CGE 는 전력을 단일 가격 PC 로만 청산하므로 시간대별 비용차가 누락
+*    delta_b 는 그 누락분이며, 첨두 감축이 자원을 절약하는 경로를 포착
+*    부호 : 양(+)이면 부하이전으로 발전 자원비용이 절감된 것.
+*==============================================================================
+ E2_RESCOST(z,sim) = -SUM(b, delta_b(b,z)*PC.l('18_ELEC',z)
+                              *(C_B.l(b,z)-C_BO(b,z)));
+ E2_LSF(z,sim)     = LSF.l(z);
+ E2_PELEC(z,sim)   = PC.l('18_ELEC',z)/PCO('18_ELEC',z) - 1;
+
+ E2_WELF(z,sim)    = E2_EV(z,sim);
+
+*==============================================================================
+* 6. 마이크로시뮬레이션 전달 벡터
+*    micro/tou_micro.py 가 이 파라미터들을 읽는다.
+*==============================================================================
+ E2_LINK_PB(b,z,sim)$PC_HBO(b,z)
+                       = PC_HB.l(b,z)/PC_HBO(b,z) - 1;
+
+ E2_LINK_PNE(i,z,sim)$(PCO(i,z) and (NOT IELEC(i)))
+                       = PC_HH.l(i,z)/PCO(i,z) - 1;
+
+ E2_LINK_W(l,z,sim)$WO(l,z)
+                       = W.l(l,z)/WO(l,z) - 1;
+
+ E2_LINK_R(k,z,sim)$RKO(k,z)
+                       = RK.l(k,z)/RKO(k,z) - 1;
+
+ E2_LINK_TR(z,sim)     = rcy_hh(z)*SUM(zjj, rcy_share(zjj,z)*RCY_POOL.l(zjj));
+
+ E2_LINK_CPI(z,sim)    = PIXCON.l(z);
+ 
+display valtth_B, tth_B_raw, res, p_TOU, p_bar, valtou_shift, E2_bill;

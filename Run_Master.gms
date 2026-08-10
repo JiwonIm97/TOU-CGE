@@ -45,9 +45,10 @@ MODEL TOU  Residential ToU tariff model /all/ ;
 * [4] 벤치마크 재현 점검
 * ------------------------------------------------------------------------------
 $ifthen %RUN_BENCHMARK% == 1
-$log ### BENCHMARK REPLICATION CHECK ###
+*$log ### BENCHMARK REPLICATION CHECK ###
     SOLVE TOU USING CNS;
 
+$ontext
 PARAMETER chk_bench(*,*)  Benchmark replication diagnostics;
     chk_bench('LEON','max_abs')    = SMAX(z, ABS(LEON.l(z)));
     chk_bench('PC_HH','max_dev')   = SMAX((i,z)$PCO(i,z), ABS(PC_HH.l(i,z)/PCO(i,z)-1));
@@ -64,7 +65,10 @@ PARAMETER chk_bench(*,*)  Benchmark replication diagnostics;
         "BENCHMARK FAIL: PC_HH != PC at tth=0. Model.gms 교체 지점을 확인할 것.";
     ABORT$(chk_bench('TIC_HH','max_abs') > 1e-6)
         "BENCHMARK FAIL: TIC_HH != 0 at tth=0.";
+ 
 $log ### BENCHMARK OK ###
+$offText
+
 $endif
 
 * ------------------------------------------------------------------------------

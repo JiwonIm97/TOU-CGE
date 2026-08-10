@@ -190,7 +190,6 @@ SET
 
 * ==============================================================================
 * E2_Sets.gms   -- Essay 2 (IBR -> ToU) 추가 집합
-* Sets.gms 직후에 include
 * ==============================================================================
 
 SET
@@ -199,14 +198,28 @@ SET
    mid           Mid-peak hours
    off           Off-peak hours /
 
- IELEC(I)        Household electricity commodity (ToU 분할 대상)
+ IELEC(I)        Household (resdiential) electricity commodity 
  / 18_ELEC /
 
- ZE2(Z)          Regions with ToU block structure activated
- / 01_KOR /
 ;
+
+set ZE2(z) /01_KOR/;
+
+SET BS(b) Lower-nest blocks  / peak, off /;
+SET BM(b) Upper-nest block   / mid /;
+
+SET JPOW(J) Electricity supplying industries (generation + T&D)
+ / 18_TnD, 19_eCoal, 20_eGas, 21_eOil, 22_eNFs /;
+
+ABORT$(CARD(JPOW) <> CARD(POWER)+CARD(TND))
+     "JPOW must equal POWER + TND";
+
+ABORT$(CARD(BS)+CARD(BM) <> CARD(b))
+     "BS and BM must partition b";
 
 ALIAS (j,jj), (i,ii,ij), (l,lj), (k,kj), (z,zj,zjj), (power, power2), (ENE,ENE2), (Elec, Elecc), (B,BB);
 
-set sim /1*12/;
+
+
+set sim /1/;
 
