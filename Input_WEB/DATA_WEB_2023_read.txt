@@ -1,0 +1,17 @@
+input="Input_WEB\DATA_WEB_2023.xlsx"
+output="Input_WEB\DATA_WEB_2023_raw.gdx"
+log="Input_WEB\DATA_WEB_2023_import.log"
+trace=3
+par=WEB_KOR        rng=01_KOR!A1:BQ109
+par=WEB_CHN        rng=02_CHN!A1:BQ109
+par=WEB_JPN        rng=03_JPN!A1:BQ109
+par=WEB_IND        rng=04_IND!A1:BQ109
+par=WEB_RUS        rng=05_RUS!A1:BQ109
+par=WEB_USA        rng=06_USA!A1:BQ109
+par=WEB_EU         rng=07_EU!A1:BQ109
+par=WEB_OHI        rng=08_OHI!A1:BQ109
+par=WEB_OUMIC      rng=09_OUMIC!A1:BQ109
+par=WEB_OLMIC      rng=10_OLMIC!A1:BQ109
+par=WEB_OLI        rng=11_OLI!A1:BQ109
+par=GHGsEF         rng=EF!A1:E69
+par=physical_unit  rng=Physical_Unit!A1:B69

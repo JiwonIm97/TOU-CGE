@@ -765,10 +765,10 @@ WEB_OLI(flow,product),
 GHGsEF(product,type) kgC per TJ,
 physical_unit(product,punit)
 ;
-$onEcho > C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023_read.txt
-input="C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023.xlsx"
-output="C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023_raw.gdx"
-log="C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023_import.log"
+$onEcho > Input_WEB\DATA_WEB_2023_read.txt
+input="Input_WEB\DATA_WEB_2023.xlsx"
+output="Input_WEB\DATA_WEB_2023_raw.gdx"
+log="Input_WEB\DATA_WEB_2023_import.log"
 trace=3
 par=WEB_KOR        rng=01_KOR!A1:BQ109    
 par=WEB_CHN        rng=02_CHN!A1:BQ109   
@@ -784,8 +784,10 @@ par=WEB_OLI        rng=11_OLI!A1:BQ109
 par=GHGsEF         rng=EF!A1:E69         
 par=physical_unit  rng=Physical_Unit!A1:B69
 $offEcho
-$call.checkErrorLevel gdxxrw @C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023_read.txt
-$gdxin "C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023_raw.gdx"
+$if not set REFRESH_WEB $setglobal REFRESH_WEB 0
+$if %REFRESH_WEB%==1 $call.checkErrorLevel gdxxrw @Input_WEB\DATA_WEB_2023_read.txt
+$if not exist Input_WEB\DATA_WEB_2023_raw.gdx $abort Missing raw WEB GDX; run with --REFRESH_WEB=1 on an Excel-enabled host
+$gdxin "Input_WEB\DATA_WEB_2023_raw.gdx"
 $loadDC WEB_KOR WEB_CHN WEB_JPN WEB_IND WEB_RUS WEB_USA WEB_EU WEB_OHI WEB_OUMIC WEB_OLMIC WEB_OLI GHGsEF physical_unit
 $gdxin
 
@@ -1271,7 +1273,7 @@ Loop(j,
  ElecRenewablesGWh('23_eREN',z)
      = sum((f_elecoutput,p_renewables), WEB(f_elecoutput,p_renewables,z));
 
-execute_unload 'C:\Users\HOME\Desktop\CBAM_refactor\Input_WEB\DATA_WEB_2023.gdx',
+execute_unload 'Input_WEB\DATA_WEB_2023.gdx',
 *Sets
 j, z, type, punit, p_nuclear, p_renewables, p_solar, p_wind, p_hydro, p_elecother, f_elecoutput,
 product, p_coal, p_oil, p_oilproduct, p_gas, p_elecheat, flow, f_elec,  f_agri, f_mining, f_foodpro, f_textiles, f_woodpro,f_paperpro,

@@ -205,7 +205,7 @@ comm(GlobalSet) "Raw commodities"
 reg(GlobalSet) "Raw regions"
 marg(comm) "Raw margin commodities"
 ;
-$gdxin "C:\Users\HOME\Desktop\CBAM_refactor\Input_w-1\GTAP12_basedata.gdx"
+$gdxin "Input_w-1\GTAP12_basedata.gdx"
 $load GlobalSet
 $loadDC reg endw acts comm marg
 
@@ -678,7 +678,7 @@ PARAMETER
 *==============================================================================
 * 3.4 Load the GTAP file which includes the parameters
 *==============================================================================
-$GDXIN "C:\Users\HOME\Desktop\CBAM_refactor\Input_w-1\GTAP12_parameters.gdx"
+$GDXIN "Input_w-1\GTAP12_parameters.gdx"
 $LOADDC ESBD ESBM EFVE
 $GDXIN
 *==============================================================================
@@ -740,7 +740,7 @@ sigma_VA(j,z)$(SUM(acts$j2acts(j,acts),VA_GTAP(acts,z))=0)
  = SUM((acts,reg)$[j2acts(j,acts) AND z2reg(z,reg)],EFVE(acts,reg))/SUM(acts$j2acts(j,acts),1);
 
 * 4. Save the aggregated model data.
-execute_unload 'C:\Users\HOME\Desktop\CBAM_refactor\Input_w-1\DATA_AGG_GTAP12.gdx',
+execute_unload 'Input_w-1\DATA_AGG_GTAP12.gdx',
  J,I,I1,BUS,PUB,TRP,F,L,K,Z,ZR,Z1,Zrich,Zother,COMtoIND,
  CO,CGO,DDO,DEPO,DIO,DSO,DSO_I,EXO,IMO,INVO,KSTO,LDO,MRGNO,POPO,RKDO,
  TDHO,DTAX,TICO,TIKO,TIMO,TIPO,TIWO,TIXO,tssm,tssd,tmrg,XSO,XSO_I,XSTO,EXTO,

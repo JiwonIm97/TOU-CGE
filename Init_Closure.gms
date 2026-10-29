@@ -1,15 +1,16 @@
+* [Z1] Structural-zero fix adapted from researcher CBAM CAL/Model uploads
+* dated 2026-10-26 (pasted markdown 5 and 2(2)). Active benchmark industries
+* only; zero-output nuclear generation remains zero, with no entry margin.
+* No epsilon output and no imputed elasticity for inactive activities.
 * ==============================================================================
 * Init_Closure.gms
 * 변수 초기값·자본이동성·클로저 (원본 L1917-2141)
 * CBAM - modular refactor of 1_Static_Model_GTAP11b_BASE.gms
 * ==============================================================================
-
- PC_HS.L(z) = PC_HSO(z);
- C_S.L(z)   = C_SO(z);
-
- PC_HS.LO(z)$PC_HSO(z) = 0.000001*PC_HSO(z);
- C_S.LO(z)$C_SO(z)     = 0.000001*C_SO(z);
- 
+* PC_HS.L(z) = PC_HSO(z);
+* C_S.L(z)   = C_SO(z);
+* PC_HS.LO(z)$PC_HSO(z) = 0.000001*PC_HSO(z);
+* C_S.LO(z)$C_SO(z)     = 0.000001*C_SO(z);
 *==============================================================================
 * 6 Numerical resolution
 *==============================================================================
@@ -30,7 +31,6 @@
  DD.L(i,z)        = DDO(i,z);
  DS.L(j,i,z)      = DSO(j,i,z);
  DS_I.L(i,z)      = DSO_I(i,z);
- DS.L(j,i,z)      = DSO(j,i,z);
  EX.L(i,z,zj)     = EXO(i,z,zj);
  EXT.L(i,z)       = EXTO(i,z);
  EXTT.L(j,i,z)    = EXTTO(j,i,z);
@@ -61,7 +61,6 @@
  EH.L(product,z)   = EHO(product,z);
  CO2I.L(product,j,z) = CO2IO(product,j,z);
  CO2H.L(product,z)   = CO2HO(product,z);
-
 *==============================================================================
 *   6.1.2 Price variables
 *==============================================================================
@@ -88,7 +87,6 @@
  PL.L(i,z)        = PLO(i,z);
  PM.L(i,zj,z)     = PMO(i,zj,z);
  PMT.L(i,z)       = PMTO(i,z);
- PP.L(j,z)        = PPO(j,z);
  PVA.L(j,Z)       = PVAO(j,Z);
  PKLE.L(j,Z)      = PKLEO(j,Z);
  PWM.L(i,zj,z)    = PWMO(i,zj,z);
@@ -101,7 +99,6 @@
  W.L(l,z)         = WO(l,z);
  WC.L(j,z)        = WCO(j,z);
  WTI.L(l,j,z)     = WTIO(l,j,z);
-
 *==============================================================================
 *   6.1.3 Nominal (value) variables
 *==============================================================================
@@ -141,22 +138,21 @@
  YHL.L(z)         = YHLO(z);
  YROW.L(z)        = YROWO(z);
  CP.L(z)          = CP0(z);
-
 *==============================================================================
 * Objective Variable
 *==============================================================================
 * OBJ.L  = 1 ;
 *==============================================================================
 *   6.1.4 Lower bounds on some variables
-*============================================================================== 
+*==============================================================================
 *$ontext
  LD.LO(l,j,z)   = 0.000001*LD.l(l,j,z);
  LDC.LO(j,z)    = 0.000001*LDC.l(j,z);
  KD.LO(k,j,z)   = 0.000001*KD.l(k,j,z);
  KDC.LO(j,z)    = 0.000001*KDC.l(j,z);
- KLE.LO(j,z)    = 0.000001*KLE.l(j,z);  
+ KLE.LO(j,z)    = 0.000001*KLE.l(j,z);
  CE.LO(j,z)     = 0.000001*CE.l(j,z);
- WTI.LO(l,j,z)  = 0.000001*WTI.l(l,j,z); 
+ WTI.LO(l,j,z)  = 0.000001*WTI.l(l,j,z);
  WC.LO(j,z)     = 0.000001*WC.l(j,z);
  RC.LO(j,z)     = 0.000001*RC.l(j,z);
  R.LO(k,j,z)    = 0.000001*R.l(k,j,z);
@@ -182,7 +178,6 @@
  PWMG.LO(i)     = 0.000001*PWMG.L(i);
  PWX.LO(i,z,zj) = 0.000001*PWX.L(i,z,zj);
  PCE.LO(j,z)    = 0.000001*PCE.l(j,z);
-
 *==============================================================================
 *  6.2 Choice of mobile or sector-specific capital
 *==============================================================================
@@ -192,9 +187,7 @@
 *자본이동은 장기적으로 발생
  KD.fx(k,j,z)$(kmob eq 0)
                   = KDO(k,j,z);
-                  
  KS.fx(k,z)$kmob  = KSO(k,z);
- 
 *==============================================================================
 *  6.3 Closures
 *==============================================================================
@@ -205,14 +198,12 @@ $ontext
  PIXGDP.FX(zr)   = PIXGDPO(zr);
  e.FX(z)         = eO(z);
 $offtext
-
 *$ontext
 * CLOSURE FP : fixed PIXGDPs; numeraire is exchange rate of reference region
 * The exchange rates are endogenous, except for the reference region.
  e.FX(zr)        = eO(zr);
  PIXGDP.FX(z)    = PIXGDPO(z);
 *$offtext
-
 *==============================================================================
 *  6.3.2 Other closure rules
 *==============================================================================
@@ -232,9 +223,7 @@ $offtext
  ttix.FX(i,z,zj)  = ttixO(i,z,zj);
  CTAX.FX(z)       = CTAX0(Z);
  CP.FX(z)         = 0;
-
 *==============================================================================
-
 * ==============================================================================
 * E2_Init.gms  -- Essay 2 변수 초기화 및 폐쇄규칙
 * Init_Closure.gms 직후에 include
@@ -251,7 +240,6 @@ $offtext
  CE_PHYS.L(z)    = CE_PHYSO(z);
  TIC_HH.L(z)     = 0;
  RCY_POOL.L(z)   = 0;
-
 *==============================================================================
 * 2. 하한 (CONOPT 수렴 안정화)
 *==============================================================================
@@ -259,14 +247,58 @@ $offtext
  PC_HB.LO(b,z)$PC_HBO(b,z)   = 0.000001*PC_HBO(b,z);
  C_B.LO(b,z)$C_BO(b,z)       = 0.000001*C_BO(b,z);
  CE_PHYS.LO(z)$CE_PHYSO(z)   = 0.000001*CE_PHYSO(z);
-
 *==============================================================================
 * 3. 폐쇄규칙 : 가계 wedge 는 기본적으로 고정(=0)
 *    시나리오 파일에서 tth_B 를 설정하여 정책충격 부과
 *==============================================================================
  tth.FX(i,z)     = tth0(i,z);
-
 * tth_B 와 tou_shift 는 EQ_E2_8 / EQ_E2_9 가 결정하므로 비고정
 * 정책충격은 파라미터 tth_B_raw 와 스위치 e2_expost 로 설정
  tth_B.L(b,z)    = tth_B0(b,z);
  tou_shift.L(z)  = 0;
+
+* [T1] Nested price and quantity initialisation is centralized here.
+PC_HS.L(z)=PC_HSO(z);
+C_S.L(z)=C_SO(z);
+PC_HH.LO(i,z)=max(1e-8,1e-6*PC_HHO(i,z));
+PC_HB.LO(b,z)=max(1e-8,1e-6*PC_HBO(b,z));
+PC_HS.LO(z)=max(1e-8,1e-6*PC_HSO(z));
+C_S.LO(z)=0;
+* [P3] LSF range 0.5..2 is an inherited numerical guard, not evidence.
+* Runner rejects boundary solutions for investigation.
+
+* [Z1] Fix inactive activities AFTER all generic .LO and .L assignments.
+* No industry entry can occur from a zero benchmark in this static model.
+XST.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+VA.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+KLE.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+CI.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+CE.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+LDC.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+KDC.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+TIP.FX(j,z)$(not ACTIVE_J(j,z)) = 0;
+LD.FX(l,j,z)$(not ACTIVE_J(j,z)) = 0;
+KD.FX(k,j,z)$(not ACTIVE_J(j,z)) = 0;
+TIW.FX(l,j,z)$(not ACTIVE_J(j,z)) = 0;
+TIK.FX(k,j,z)$(not ACTIVE_J(j,z)) = 0;
+XS.FX(j,i,z)$(not ACTIVE_J(j,z)) = 0;
+DS.FX(j,i,z)$(not ACTIVE_J(j,z)) = 0;
+EXTT.FX(j,i,z)$(not ACTIVE_J(j,z)) = 0;
+DI.FX(i,j,z)$(not ACTIVE_J(j,z)) = 0;
+DE.FX(i,j,z)$(not ACTIVE_J(j,z)) = 0;
+PT.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+PP.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+PCI.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+PCE.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+PVA.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+PKLE.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+WC.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+RC.FX(j,z)$(not ACTIVE_J(j,z)) = 1;
+WTI.FX(l,j,z)$(not ACTIVE_J(j,z)) = 1;
+R.FX(k,j,z)$(not ACTIVE_J(j,z)) = 1;
+RTI.FX(k,j,z)$(not ACTIVE_J(j,z)) = 1;
+P2.FX(j,i,z)$(not ACTIVE_J(j,z)) = 1;
+P3.FX(i,j,z)$(not ACTIVE_J(j,z)) = 1;
+P4.FX(ene,j,z)$(not ACTIVE_J(j,z)) = 1;
+* Zero-capacity generation excluded from the regional generation CES.
+XS.FX(POWER,'18_ELEC',z)$(not ACTIVE_POWER(POWER,z))=0;

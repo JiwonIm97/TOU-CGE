@@ -1,0 +1,38 @@
+# Local inputs, confidential survey data and generated GAMS files
+*.gdx
+*.xls
+*.xlsx
+*.log
+*.lst
+*.lxi
+*.g00
+*.g01
+*.pf
+*.put
+*.opt
+.env
+.env.*
+!.env.example
+
+# Python/Jupyter caches and environments
+**/__pycache__/
+*.py[cod]
+**/.ipynb_checkpoints/
+.venv/
+venv/
+
+# Generated household records and analysis results
+Micro/common_sample_*/
+Micro/output_jeju_*/
+Micro/policy_analysis/
+Output_w-1/
+Figure/overall_outcomes_exports/
+Figure/Sections_2_4/exports/
+Figure/Sections_2_4/figure_data/
+
+# Exported figures and manuscripts
+*.pdf
+*.png
+*.svg
+*.docx
+*.zip

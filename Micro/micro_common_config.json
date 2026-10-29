@@ -1,0 +1,26 @@
+{
+  "profile": "other",
+  "voltage": "apartment-proxy",
+  "min_bill_won": 1000,
+  "min_kwh": 50,
+  "max_kwh": 1000,
+  "inversion_tolerance_won": 1.0,
+  "vat": 0.1,
+  "fund": 0.027,
+  "annual_fund_first_half": 0.032,
+  "climate_fuel_won_kwh": 14.0,
+  "contract_kw": 3.0,
+  "weight_column": null,
+  "low_income_quintiles": [
+    1,
+    2
+  ],
+  "reference_period": "annual",
+  "reference_means_manwon": {
+    "1": 930,
+    "2": 2639,
+    "3": 3997,
+    "4": 5620,
+    "5": 10404
+  }
+}

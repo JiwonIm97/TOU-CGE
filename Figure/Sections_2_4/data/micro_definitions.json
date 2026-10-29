@@ -1,0 +1,58 @@
+{
+  "common_sample": {
+    "config": {
+      "profile": "other",
+      "voltage": "apartment-proxy",
+      "min_bill_won": 1000,
+      "min_kwh": 50,
+      "max_kwh": 1000,
+      "inversion_tolerance_won": 1.0,
+      "vat": 0.1,
+      "fund": 0.027,
+      "annual_fund_first_half": 0.032,
+      "climate_fuel_won_kwh": 14.0,
+      "contract_kw": 3.0,
+      "weight_column": null,
+      "low_income_quintiles": [
+        1,
+        2
+      ],
+      "reference_period": "annual",
+      "reference_means_manwon": {
+        "1": 930,
+        "2": 2639,
+        "3": 3997,
+        "4": 5620,
+        "5": 10404
+      }
+    },
+    "input_file": "Micro/survey_data.xlsx",
+    "input_sha256": "d8ca26078caff173ded82de0cdff0d42a7278bc18ccd9fcaab6b4b2e05d5d201",
+    "n_input": 2638,
+    "n_common": 2499,
+    "income_cutoffs_monthly_eq_won": [
+      1767766.9529663688,
+      2500000.0,
+      3181980.5153394635,
+      4472135.954999579
+    ],
+    "household_ids_sha256": "3bbc926ceda6185c8ec40cde57ec27a79a85ca5f2dcefbc07de9f66b23bab2b7",
+    "income_definition": "monthly household income KRW / sqrt(household size)",
+    "quintile_method": "weighted household quantiles in common sample; equal incomes stay together",
+    "reference_means_are_cutoffs": false
+  },
+  "gdx_file": "TOU_recycling_results.gdx",
+  "gdx_modified": 1793177784.7793715,
+  "selected_rate": "r100",
+  "selected_mix": "a50",
+  "shift_realization": 0.0,
+  "primary_allocations": [
+    "U",
+    "I",
+    "IC"
+  ],
+  "C_appendix": true,
+  "budget_method": "HH share only / CGE BAU electricity expenditure * sample BAU net energy charges",
+  "price_method": "CGE block price ratios applied proportionally; REN effect included once",
+  "scope": "Conditional household bill incidence; not national totals or household EV"
+}

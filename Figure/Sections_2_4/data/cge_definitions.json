@@ -1,0 +1,16 @@
+{
+  "gdx_file": "TOU_recycling_results.gdx",
+  "gdx_modified": 1793108683.4561222,
+  "region": "01_KOR",
+  "selected_rate": "r100",
+  "selected_mix": "a50",
+  "ren_scope": "23_eREN: renewable and other generation; no nuclear or fossil support",
+  "budget_rule": "frozen positive no-recycling TOU wedge receipts; not utility profit",
+  "model_money_to_billion_usd_conditional": 10.0,
+  "caveats": [
+    "Static production support, not capital investment",
+    "No hourly dispatch",
+    "Government fiscal residual is not utility profit",
+    "CGE EV is not micro EV"
+  ]
+}

@@ -35,3 +35,26 @@ PARAMETER
 $macro RCY_IN(zz)   [SUM(zjj, rcy_share(zjj,zz)*TCBAM(zjj))]
 $macro RCY_INF(zz)  [SUM(zjj$(NOT SAMEAS(zjj,zz)), rcy_share(zjj,zz)*TCBAM(zjj))]
 $macro RCY_OUTF(zz) [TCBAM(zz)*SUM(zjj$(NOT SAMEAS(zjj,zz)), rcy_share(zz,zjj))]
+
+* [P1] TOU national transfers are separate from CBAM cross-border transfers.
+* B_TOU is the HH part of a frozen TOU recycling budget; model money units.
+* [P2] Assumption: non-taxable lump-sum rebate added AFTER direct income tax.
+* Government savings absorb the financing difference; real G is fixed.
+PARAMETERS B_TOU(z) "Common TOU rebate budget in model money units"
+           tou_rebate_on(z) "One when the TOU policy includes household transfers";
+B_TOU(z)=0;
+tou_rebate_on(z)=0;
+$macro TOU_TRANSFER(zz) [tou_rebate_on(zz)*B_TOU(zz)]
+
+* TOU supply support is independent of CBAM RCY_IN.
+* Model aggregation: REN is renewable AND OTHER generation; nuclear excluded.
+SET tou_ren_target(j) / 23_eREN /;
+PARAMETERS B_TOU_REN(z) "TOU budget for REN production-tax support"
+           tou_ren_on(z) "Activate dedicated TOU REN equation"
+           tou_ren_share(j,z) "Benchmark production-value shares within target";
+B_TOU_REN(z)=0;
+tou_ren_on(z)=0;
+tou_ren_share(j,z)=0;
+tou_ren_share(j,z)$(tou_ren_target(j) and ACTIVE_J(j,z))
+    = XSTO(j,z)*PPO(j,z)
+      /sum(jj$(tou_ren_target(jj) and ACTIVE_J(jj,z)),XSTO(jj,z)*PPO(jj,z));

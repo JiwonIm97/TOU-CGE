@@ -1,77 +1,77 @@
-$TITLE    TOU-CGE
-$STITLE   Residential IBR -> ToU tariff reform, world static CGE
-* ==============================================================================
-* Run_Master.gms : 실행 진입점
-* ==============================================================================
-
-* ------------------------------------------------------------------------------
-* [1] 제어 스위치 (1 = Run, 0 = Skip)
-* ------------------------------------------------------------------------------
-$setglobal RUN_BENCHMARK    0
-$setglobal RUN_S0_IBR       0
-$setglobal RUN_S1_TOU       0
-$setglobal RUN_S2_TOU_RCY   1
-
-* RUN_BENCHMARK   보정 직후 벤치마크 재현 solve 및 진단 (Walras 잔차 포함)
-* RUN_S0_IBR      기준선. 현행 누진요금제. tth_B = 0
-* RUN_S1_TOU      ToU 전환. wedge 수입 정부 보유
-* RUN_S2_TOU_RCY  ToU 전환 + wedge 수입의 가계 정액환급
-
-* ------------------------------------------------------------------------------
-* [2] 모형 엔진 로드
-* ------------------------------------------------------------------------------
+$title TOU master runner
+* Set RUN_POLICY to 1 after completing Policy/TOU_Inputs.gms.
+* Command-line --RUN_POLICY=1 also enables the TOU REN-HH recycling experiments.
+$if not set RUN_POLICY $setglobal RUN_POLICY 1
+* Run from this project root.
+* RUN_POLICY=0: benchmark only. RUN_POLICY=1: benchmark + policy experiments.
 $include "Sets.gms"
 $include "PAR.gms"
 $include "CAL.gms"
 $include "Policy/Recycling.gms"
 $include "Model.gms"
-$include "Results_format/Declare_Results.gms"
 $include "Init_Closure.gms"
+option cns=conopt4;
+model TOU /all/;
+TOU.holdfixed=1;
+$include "Scaling.gms"
+TOU.scaleopt=1;
+* 1. Benchmark policy: no TOU shock and no new rebate
+tth_B_raw(b,z) = 0;
+e2_expost(z)   = 0;
+tou_rebate_on(z) = 0;
+B_TOU(z)        = 0;
+B_TOU_REN(z)    = 0;
+tou_ren_on(z)   = 0;
 
-* ------------------------------------------------------------------------------
-* [3] 모형 선언 및 솔버 옵션
-* ------------------------------------------------------------------------------
-option cns = conopt4;
-option limrow = 0, limcol = 0, solprint = off;
-$Offlisting
-$OffSymList
-$Offinclude
+* Compact output; essential status and accounting checks remain active.
+option limrow=0, limcol=0, solprint=off;
 
-MODEL TOU  Residential ToU tariff model /all/ ;
- TOU.holdfixed = 1;
- TOU.solvelink = 5;
+solve TOU using CNS;
 
-* ------------------------------------------------------------------------------
-* [4] 벤치마크 재현 점검
-* ------------------------------------------------------------------------------
-$ifthen %RUN_BENCHMARK% == 1
-*$log ### BENCHMARK REPLICATION CHECK ###
-    SOLVE TOU USING CNS;
+display TOU.solvestat, TOU.modelstat;
 
-$ontext
-PARAMETER chk_bench(*,*)  Benchmark replication diagnostics;
-    chk_bench('LEON','max_abs')    = SMAX(z, ABS(LEON.l(z)));
-    chk_bench('PC_HH','max_dev')   = SMAX((i,z)$PCO(i,z), ABS(PC_HH.l(i,z)/PCO(i,z)-1));
-    chk_bench('CE_PHYS','max_dev') = SMAX(z$CE_PHYSO(z), ABS(CE_PHYS.l(z)/CE_PHYSO(z)-1));
-    chk_bench('C_B','max_dev')     = SMAX((b,z)$C_BO(b,z), ABS(C_B.l(b,z)/C_BO(b,z)-1));
-    chk_bench('TIC_HH','max_abs')  = SMAX(z, ABS(TIC_HH.l(z)));
-    chk_bench('tou_shift','max_abs') = SMAX(z, ABS(tou_shift.l(z)));
-    chk_bench('CESGAP','max_abs')  = SMAX(z, ABS(C.l('18_ELEC',z)-CE_PHYS.l(z)));
-    display chk_bench;
+abort$(TOU.solvestat <> 1
+    or (TOU.modelstat <> 15 and TOU.modelstat <> 16))
+    "Benchmark solve failed";
 
-    ABORT$(chk_bench('LEON','max_abs') > 1e-6)
-        "BENCHMARK FAIL: Walras residual. 방정식-변수 개수를 확인할 것.";
-    ABORT$(chk_bench('PC_HH','max_dev') > 1e-6)
-        "BENCHMARK FAIL: PC_HH != PC at tth=0. Model.gms 교체 지점을 확인할 것.";
-    ABORT$(chk_bench('TIC_HH','max_abs') > 1e-6)
-        "BENCHMARK FAIL: TIC_HH != 0 at tth=0.";
- 
-$log ### BENCHMARK OK ###
-$offText
+* 3. Check benchmark replication and accounting
+parameter check_bau(*);
 
+check_bau('C_rel') =
+    smax((i,z), abs(C.l(i,z)-CO(i,z))/(1+abs(CO(i,z))));
+
+check_bau('XST_rel') =
+    smax((j,z), abs(XST.l(j,z)-XSTO(j,z))/(1+abs(XSTO(j,z))));
+
+check_bau('PC_HH_rel') =
+    smax((i,z), abs(PC_HH.l(i,z)-PC_HHO(i,z))
+              /(1+abs(PC_HHO(i,z))));
+
+check_bau('C_B_rel') =
+    smax((b,z), abs(C_B.l(b,z)-C_BO(b,z))
+              /(1+abs(C_BO(b,z))));
+
+check_bau('LSF_dev') =
+    smax(z, abs(LSF.l(z)-1));
+
+check_bau('TIC_HH_abs') =
+    smax(z, abs(TIC_HH.l(z)));
+
+check_bau('Walras_abs') =
+    smax(z, abs(LEON.l(z)));
+
+check_bau('CES_exp_rel') =
+    smax(z,
+        abs(PC_HH.l('18_ELEC',z)*C.l('18_ELEC',z)
+          - sum(b,PC_HB.l(b,z)*C_B.l(b,z)))
+        /(1+abs(PC_HH.l('18_ELEC',z)*C.l('18_ELEC',z))));
+
+display check_bau;
+
+
+$ifthen %RUN_POLICY%==1
+$include "Policy/TOU_Inputs.gms"
+$include "Scenario/Run_Policy.gms"
+$else
+put_utility 'log' / 'Run_Master: benchmark passed. Policy scenarios disabled (RUN_POLICY=0).';
 $endif
-
-* ------------------------------------------------------------------------------
-* [5] 시나리오 실행
-* ------------------------------------------------------------------------------
-$include "Scenario/ScenarioList.gms"

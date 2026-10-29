@@ -3,7 +3,6 @@
 * 파라미터 선언 + GTAP GDX 로드 + 외생가격 (원본 L189-531)
 * CBAM - modular refactor of 1_Static_Model_GTAP11b_BASE.gms
 * ==============================================================================
-
 *==============================================================================
 * 2 Declaration of parameters and benchmark variables
 *==============================================================================
@@ -11,7 +10,7 @@ PARAMETER
 *==============================================================================
 * 2.1 Model Parameters (CES/CET/Leontief)
 *==============================================================================
- A_K(z)              Scale parameter (price of new capital)
+A_K(z)              Scale parameter (price of new capital)
  aij(i,j,z)          Input-output coefficient for non-energy intermediates
  aij2(i,j,z)         Input-output coefficient for energy intermediates
  B_KD(j,z)           Scale parameter for composite capital (CES)
@@ -47,7 +46,7 @@ PARAMETER
  io2(j,z)            Technical coefficient for total energy intermediate consumption
  v(j,z)              Value added coefficient (Leontief)
  v2(j,z)             KLE composite coefficient (Leontief)
- kmob                Capital mobility flag 
+ kmob                Capital mobility flag
  RES                 Scaling factor for GTAP data
  rho_KD(j,z)         Elasticity parameter (CES - composite capital)
  rho_LD(j,z)         Elasticity parameter (CES - composite labor)
@@ -73,11 +72,10 @@ PARAMETER
  sigma_X3(i,z)       Elasticity (CES - top level)
  sigma_X4(z)         Elasticity (CES - Aggregated Electricity)
  sigma_Y(i,z)        Income elasticity of household consumption
- tmrg(i,ij,zj,z)     Transport margin rate
+ tmrg(i,ij,zj,z)     Transport margin value
  TnDShare(z)         Transmission & Distribution share in electricity
  PowerShare(z)       Generation share in electricity
  theta2(j,i,z)       Initial share of industry j in commodity i output
-
 *==============================================================================
 * 2.2 Benchmark Variables (Post-fixed with 'O' for Original)
 *==============================================================================
@@ -113,7 +111,7 @@ PARAMETER
  KDCO(j,z)           Demand for composite capital by industry j in region z
  KSO(k,z)            Supply of type k capital in region z
  KSTO(z)             Total supply of capital in region z
- LDO(l,j,z)          Demand for type l labor by industry j in region z  
+ LDO(l,j,z)          Demand for type l labor by industry j in region z
  LDCO(j,z)           Demand for composite labor by industry j in region z
  LSO(l,z)            Supply of type l labor in region z
  MRGNO(i,z)          Domestic production of commodity i in region z exported as international margin services
@@ -125,7 +123,6 @@ PARAMETER
  XSO(j,i,z)          Total output of industry j in region z
  XSTO(j,z)           Total output of industry j
  POWERQO(z)          Total power output in region z
-
 *==============================================================================
 * 2.2.2 Price variables
 *==============================================================================
@@ -165,7 +162,6 @@ PARAMETER
  WO(l,z)             Wage rate of type l labor in region z
  WCO(j,z)            Wage rate of industry j composite labor in region z
  WTIO(l,j,z)         Wage rate paid by industry j for type l labor in region including payroll taxes
-
 *==============================================================================
 * 2.2.3 Nominal (value) variables
 *==============================================================================
@@ -204,7 +200,6 @@ PARAMETER
  YHKO(z)             Household capital income in region z
  YHLO(z)             Household labor income in region z
  YROWO(z)            Rest-of-the-world total income from region z
-
 *==============================================================================
 * 2.2.4 Rates and intercepts
 *==============================================================================
@@ -218,37 +213,32 @@ PARAMETER
  ttipO(j,z)          Tax rate on the production of industry j
  ttiwO(l,j,z)        Tax rate on type l worker compensation in industry j
  ttixO(i,z,zj)       Export tax rate on exported commodity i
-      
 *==============================================================================
 * 2.2.5 Utility Variable
 *==============================================================================
  UUO(z)              Utility of region z
  epO(z)              Expenditure function of region z
  sigma_w(i,z)        Share parameter in utility function
-
 *==============================================================================
-* 2.2.6 Tax rebate 
+* 2.2.6 Tax rebate
 *==============================================================================
  ttip_shareO(j,z)    Industry output share
  deltattipO(j,z)     Production tax reduction due to subsidies in industry j
  ttiw_shareO(l,j,z)  Labor share
  deltattiwO(l,j,z)   Labor tax reduction due to subsidies in industry j
-
 *==============================================================================
-* 2.2.7 CBAM 
+* 2.2.7 CBAM
 *==============================================================================
  TCBAMO(z)           Total CBAM imposition of destination region z
  TMO(z)              Total taxes and duties on imports of destination region z
  ;
-
 * ==============================================================================
 * E2_Declare.gms  -- Essay 2 파라미터 및 변수 선언
 * ==============================================================================
-
 PARAMETERS
 * --- 보정 파라미터 -------------------------------------------------------------
- theta_B(b,z)      Benchmark share of block b in household electricity
- sigma_ToU(z)      Elasticity of substitution across ToU load blocks
+theta_B(b,z)      Benchmark share of block b in household electricity
+* Flat-CES legacy sigma_ToU removed; use sigma_ToU1/2 [T4].
  tth_B0(b,z)       Benchmark household electricity wedge by block (=0)
  tth0(i,z)         Benchmark household consumption wedge (=0)
  tth_B_raw(b,z)    ToU wedge schedule before normalisation (exogenous shock)
@@ -260,14 +250,12 @@ PARAMETERS
  PC_HBO(b,z)       Benchmark household purchaser price of electricity block b
  C_BO(b,z)         Benchmark household electricity consumption by block
  CE_PHYSO(z)       Benchmark physical household electricity consumption
-
 * --- 물리량 환산 ---------------------------------------------------------------
  EHI_ELEC(z)       ktoe of household electricity per unit of CGE value
- PKWH_O(z)         Benchmark implied household electricity price (value per ktoe)
+ PKWH_O(z)         Benchmark model expenditure per ktoe
 ;
-
 VARIABLES
- PC_HH(i,z)        Household purchaser price of commodity i (incl. household wedge)
+PC_HH(i,z)        Household purchaser price of commodity i (incl. household wedge)
  PC_HB(b,z)        Household purchaser price of electricity in block b
  C_B(b,z)          Household electricity consumption in block b
  CE_PHYS(z)        Physical household electricity consumption (sum over blocks)
@@ -278,6 +266,7 @@ VARIABLES
  tou_shift(z)      Proportional shift applied to the ToU wedge schedule
 ;
 
+* [T1-T4] Active nested CES parameters; benchmark shares sum to one.
 PARAMETER
  theta_BS(b,z)     Share of block b within the lower (shiftable) nest
  theta_MID(z)      Share of the non-shiftable block in household electricity
@@ -286,8 +275,8 @@ PARAMETER
  sigma_ToU2(z)     Substitution elasticity of the upper nest (mid vs composite)
  PC_HSO(z)         Benchmark price index of the shiftable composite
  C_SO(z)           Benchmark quantity of the shiftable composite
- delta_b(b,z)      Marginal supply cost premium of block b (relative to mean)
 ;
+
 
 POSITIVE VARIABLES
  PC_HS(z)          CES price index of the shiftable electricity composite
@@ -295,46 +284,36 @@ POSITIVE VARIABLES
 ;
 
 POSITIVE VARIABLES PC_HH, PC_HB, C_B, CE_PHYS;
-
 PARAMETER
- delta_b(b,z)      Marginal supply cost premium of block b (relative to mean)
+delta_b(b,z)      Assumed relative supply cost coefficient by block [T5]
  LSFO(z)           Benchmark load-shape cost factor (=1)
 ;
-
 VARIABLES
- LSF(z)            Load-shape cost factor for electricity supplying industries
+LSF(z)            Load-shape cost factor for electricity supplying industries
 ;
 POSITIVE VARIABLE LSF;
-
 Scalar
- Tiny small figure to avoid division by zero / 0.000000000001/ ;
-
+Tiny small figure to avoid division by zero / 0.000000000001/ ;
 *==============================================================================
 * 3 Data
 *==============================================================================
-* 3.1 Data input from GTAP8.1
-*==============================================================================
-* 3.1.1 Reading data aggregated with DATA_AGG-2007.gms
-*==============================================================================
-$GDXIN Input_w-1\DATA_AGG_250804.gdx
-$LOAD CO, CGO, DDO, DEPO, DIO, DSO, DSO_I, EXO, IMO, INVO, KSTO, LDO, MRGNO, XSO, XSO_I, XSTO, RKDO
-$LOAD POPO, TDHO, TICO, TIKO, TIMO, TIPO, TIWO, TIXO, tmrg
-$LOAD sigma_M1, sigma_M2, sigma_VA
-
-display sigma_M1, sigma_M2, sigma_VA ;
-
-sigma_M1('04_GAS',Z) = 6;
-
+* 3.1 Read aggregated GTAP12 data
+* ==============================================================================
+$GDXIN Input_w-1/DATA_AGG_GTAP12.gdx
+$LOAD CO CGO DDO DEPO DIO DSO DSO_I EXO IMO INVO KSTO LDO
+$LOAD MRGNO XSO XSO_I XSTO RKDO
+$LOAD POPO TDHO TICO TIKO TIMO TIPO TIWO TIXO tmrg
+$LOAD sigma_M1 sigma_M2 sigma_VA
+$GDXIN
 *==============================================================================
 * 3.1.2 Rescaling the variables
 *==============================================================================
-* GTAP 8.1 data are in millions of (2004 and 2007) US dollars
+* Input monetary scaling retained: verify source GDX units and base year.
+* If raw values are million USD, RES=10000 yields 10 billion USD units.
 * With RES = 10000, model results are in tens of billions (10G$)
 RES = 10000;
-
 * NOTE: In GTAP parlance, "agents' prices" are prices paid by buyers, and
 * "market prices" are prices received by sellers.
-
 CO(i,z)          = CO(i,z)/RES;
 CGO(i,z)         = CGO(i,z)/RES;
 DDO(i,z)         = DDO(i,z)/RES;
@@ -360,23 +339,19 @@ tmrg(i,ij,z,zj)  = tmrg(i,ij,z,zj)/RES;
 XSO_I(i,z)       = XSO_I(i,z)/RES;
 XSO(j,i,z)       = XSO(j,i,z)/RES;
 XSTO(j,z)        = XSTO(j,z)/RES;
-
 *==============================================================================
 * 3.3 Exogenous prices and parameters
 *==============================================================================
 * Price elasticity (should be equal to one to verify homogeneity)
 eta = 1;
-
 *==============================================================================
 * CES and CET elasticities
 *==============================================================================
 PARAMETER
- PARZ Parameter array for storing external parameter values;
-
+PARZ Parameter array for storing external parameter values;
 *$CALL gdxxrw Input_w-1\VAL_PAR_250805.xls @Input_w-1\VAL_PAR_250805.txt trace=0 output=Input_w-1\VAL_PAR_250805.gdx
-$GDXIN Input_w-1\VAL_PAR_250805.gdx
+$GDXIN Input_w-1\PAR.gdx
 $LOAD sigma_KD, sigma_LD, sigma_KLE, sigma_X1, sigma_X2, sigma_X3, sigma_X0, sigma_y, PARZ
-
 *------------------------------------------------------------------------------
  sigma_KD(j,z)   = 2*sigma_VA(j,z);
  sigma_M1('04_GAS',Z) = 6;
@@ -385,20 +360,16 @@ $LOAD sigma_KD, sigma_LD, sigma_KLE, sigma_X1, sigma_X2, sigma_X3, sigma_X0, sig
  sigma_X2(i,Z)  = 2;
  sigma_X4(z)    = 2;
  sigma_LD(j,z)   = 2*sigma_VA(j,z);
-
 *------------------------------------------------------------------------------
 * CES - composite KLE, KE, ENER
  sigma_KLE('10_PETROLCOAL',z)  = 0.9 ;
  sigma_ENER(j,z) = 0.9 ;
-
 *------------------------------------------------------------------------------
 * LES parameters - Frisch (선진국 기준으로 설정)
  frisch(Z) = -1.3;
-
 *------------------------------------------------------------------------------
 * Slopes of taxation functions
  ttdh0O(z)       = 0;
-
 *------------------------------------------------------------------------------
 * Exogenous Prices assigned to 1
  eO(z)           = 1;
@@ -406,7 +377,6 @@ $LOAD sigma_KD, sigma_LD, sigma_KLE, sigma_X1, sigma_X2, sigma_X3, sigma_X0, sig
  PLO(i,z)        = 1;
  PWMGO(i)        = 1;
  WO(l,z)         = 1;
-
 *==============================================================================
 * 4 Calibration
 *==============================================================================
